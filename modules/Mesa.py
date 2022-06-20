@@ -1,0 +1,2 @@
+class MesaFile():
+    pass
