@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import numpy as np
-import ChatalyticsEngine as c
+import old.ChatalyticsEngine_v1 as c
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 

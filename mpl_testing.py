@@ -1,16 +1,14 @@
 import numpy as np
-import ChatalyticsEngine as c
-from datetime import datetime
+import pandas as pd
+import chatalyticsengine as c
 import matplotlib.pyplot as plt
+from datetime import timedelta
 
-# GET CELL: data.loc[y, x]
-
-data = c.loadData("private_test_data1.txt")
-
+data = c.loadData("private/full_test_data.txt")
 print(data)
 
-x = np.arange(np.datetime64('2022-06-05'), np.datetime64('2022-06-22'), np.timedelta64(1, 'D'))
-fx = np.random.randn(len(x))
+x = np.arange(pd.to_datetime(data.index[data["index"] == 0]), pd.to_datetime(data.index[data["index"] == data.shape[0] - 1]), step=timedelta(days=1))
+fx = x
 
 fig, ax = plt.subplots()
 ax.plot(x, fx)  
@@ -19,3 +17,4 @@ ax.set(xlabel='x', ylabel='y', title='title')
 ax.grid()
 
 plt.show()
+
