@@ -1,0 +1,2 @@
+#delta of time:
+td = dataframe.loc[dataframe.shape[0] - 1, "timestamp"] - dataframe.loc[0, "timestamp"]

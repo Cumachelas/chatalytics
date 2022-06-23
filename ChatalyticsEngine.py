@@ -1,9 +1,13 @@
 import itertools
 import logging as log
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
-log.basicConfig(filename="cal_main.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S", level=log.DEBUG)
+log.basicConfig(filename="cal_main.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S", level=log.INFO)
+    
+if __name__ == "__main__":
+    log.info("ChatalyticsEngine main()")
 
 def loadData(filepath:str, fileEncoding:str="utf8", splitFormat:str=None, timestampFormat:str="%d/%m/%Y,%H:%M"):
 
@@ -16,14 +20,15 @@ def loadData(filepath:str, fileEncoding:str="utf8", splitFormat:str=None, timest
             raw_file = chat.read()
             raw_lines = raw_file.splitlines()
 
-            log.debug("loadData() - file read successful, starting convertion")
+            log.info("loadData() - file read successful, starting convertion")
             
             for raw_line in raw_lines:
                 
                 raw_strings_list = raw_line.split(" ", maxsplit=4)
 
                 try:
-                    ts = datetime.strptime(raw_strings_list[0] + raw_strings_list[1], timestampFormat)
+                    #ts = datetime.strptime(raw_strings_list[0] + raw_strings_list[1], timestampFormat)
+                    ts = np.datetime64(datetime.strptime(raw_strings_list[0] + raw_strings_list[1], timestampFormat)).astype(datetime)
                 except (IndexError, ValueError) as e:
                     stripped = list_of_lines[-1]["message"].strip(" ")
                     list_of_lines[-1]["message"] = stripped + " " + raw_line
@@ -31,13 +36,14 @@ def loadData(filepath:str, fileEncoding:str="utf8", splitFormat:str=None, timest
                 else:
                     line = {
                         "timestamp": ts,
+                        "date": ts.date(),
                         "sender": raw_strings_list[3].strip(":"),
                         "message": raw_strings_list[4]
                         }
 
                     list_of_lines.append(line)
                     
-            log.debug(f"loadData() - file read finished with {additional_line_debug} new line checks")
+            log.info(f"loadData() - file read finished with {additional_line_debug} new line checks")
             
             return pd.DataFrame(list_of_lines)
     
@@ -56,7 +62,7 @@ def prquery(dataframe:pd.DataFrame(), q, filters=[]):
         for col in ["message", "sender", "timestamp"]:
             idx.append(dataframe.index[dataframe[col] == q])
             
-        log.debug("prquery() - indexing successful (no filters)")  
+        log.info("prquery() - indexing successful (no filters)")  
         
     else:
         
@@ -67,7 +73,7 @@ def prquery(dataframe:pd.DataFrame(), q, filters=[]):
                 log.error("prquery() - indexing FAILED, filter does not exist")
                 return []  
             
-        log.debug(f"prquery() - indexing successful (filter: {f})")
+        log.info(f"prquery() - indexing successful (filter: {f})")
         
     return list(itertools.chain(*idx))
 
@@ -81,10 +87,10 @@ def datequery(dataframe:pd.DataFrame(), q, mode="next"):
             log.warning(f"datequery() - next index out of range (mode: {mode})")
             return max(matches_indexes)
         elif closest_date < q:
-            log.debug(f"datequery() - indexing successful (mode: {mode})")
+            log.info(f"datequery() - indexing successful (mode: {mode})")
             return max(matches_indexes) + 1
         else:
-            log.debug(f"datequery() - indexing successful (mode: {mode})")
+            log.info(f"datequery() - indexing successful (mode: {mode})")
             return min(matches_indexes)
         
     elif mode == "previous":
@@ -95,14 +101,14 @@ def datequery(dataframe:pd.DataFrame(), q, mode="next"):
             log.warning(f"datequery() - previous index out of range (mode: {mode})")
             return 0
         else:
-            log.debug(f"datequery() - indexing successful (mode: {mode})")
+            log.info(f"datequery() - indexing successful (mode: {mode})")
             return min(matches_indexes)
         
     elif mode == "last":
         closest_date = min(dataframe["timestamp"].tolist(), key=lambda d: abs(d - q)) # Get closest date
         matches_indexes = prquery(dataframe, q=closest_date, filters="timestamp") # Get the index
         
-        log.debug(f"datequery() - indexing successful (mode: {mode})")
+        log.info(f"datequery() - indexing successful (mode: {mode})")
         
         return min(matches_indexes)
     
